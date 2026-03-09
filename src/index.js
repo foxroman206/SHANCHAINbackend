@@ -19,7 +19,25 @@ const app  = express();
 const PORT = process.env.PORT || 3001;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+app.use(cors({
+  origin: function (origin, callback) {
+    // 允許 Vercel 正式網址（不分有無尾巴斜線）
+    if (!origin || origin.startsWith('https://shanchain.vercel.app')) {
+      callback(null, true);
+    }
+    // 也允許本地開發（原本的邏輯）
+    else if (origin === 'http://localhost:5173' || origin.startsWith('http://localhost')) {
+      callback(null, true);
+    }
+    // 其他 origin 拒絕
+    else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
