@@ -6,6 +6,9 @@ import { authRequired, optionalAuth } from '../middleware.js';
 
 const router = Router();
 
+// OPTIONS preflight（CORS 預檢請求）
+router.options('*', (req, res) => res.sendStatus(200));
+
 // POST /donations  – create a donation (simulates payment gateway)
 router.post('/', optionalAuth, (req, res) => {
   const { project_id, amount, method, method_tab = 'fiat', is_anonymous = false, want_nft = true } = req.body;
@@ -70,14 +73,14 @@ router.post('/', optionalAuth, (req, res) => {
   });
 });
 
-// GET /donations  – current user's donation history
+// GET /donations  – current user's donation history（需登入）
 router.get('/', authRequired, (req, res) => {
   const { page = 1, limit = 20 } = req.query;
-  const offset = (page - 1) * limit;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
 
   const donations = db.prepare(
     'SELECT d.*, p.title as project_title, p.emoji as project_emoji FROM donations d JOIN projects p ON d.project_id=p.id WHERE d.user_id=? ORDER BY d.created_at DESC LIMIT ? OFFSET ?'
-  ).all(req.user.id, parseInt(limit), parseInt(offset));
+  ).all(req.user.id, parseInt(limit), offset);
 
   const total = db.prepare("SELECT count(*) as c, COALESCE(sum(amount),0) as sum FROM donations WHERE user_id=? AND status='confirmed'").get(req.user.id);
 
