@@ -9,8 +9,7 @@ import authRouter      from './routes/auth.js';
 import projectsRouter  from './routes/projects.js';
 import donationsRouter from './routes/donations.js';
 import daoRouter       from './routes/dao.js';
-import aiRouter        from './routes/ai-proxy.js';
-// Note: ai.js kept for reference; ai-proxy.js adds Python AI service integration
+import aiRouter        from './routes/ai.js';   // ← 改回 ai.js（Render 上 ai-proxy.js 不存在會導致整個 server crash）
 import db              from './db.js';
 
 dotenv.config();
@@ -47,6 +46,11 @@ app.use('/projects',  projectsRouter);
 app.use('/donations', donationsRouter);
 app.use('/dao',       daoRouter);
 app.use('/ai',        aiRouter);
+
+// Root route (prevents 404 on base URL)
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'GoodChain API', version: '1.0.0' });
+});
 
 // Health check
 app.get('/health', (req, res) => {
